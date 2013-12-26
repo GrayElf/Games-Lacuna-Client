@@ -13,14 +13,18 @@ my $star;
 my $orbit;
 my $eta;
 my $outfile;
+my $rpc_sleep = 1;
 
 our $LocalTZ = DateTime::TimeZone->new( name => 'local' )->name;
 
+my $cfg_file = shift(@ARGV) || 'lacuna.yml' unless $ARGV[0] and $ARGV[0] =~ /^\-/;
 GetOptions(
-    'star=s'    => \$star,
-    'orbit=s'   => \$orbit,
-    'eta=s'     => \$eta,
-    'outfile=s' => \$outfile,
+    'c|config=s' => \$cfg_file,
+    'star=s'     => \$star,
+    'orbit=s'    => \$orbit,
+    'eta=s'      => \$eta,
+    'outfile=s'  => \$outfile,
+    'sleep=i'	 => \$rpc_sleep,
 );
 
 usage() if !$star || !$orbit || !$eta;
@@ -37,14 +41,14 @@ local_scope: {
     say 'T minus: ', $tminus, ' seconds';
 }
 
-my $cfg_file = shift(@ARGV) || 'lacuna.yml';
 unless ( $cfg_file and -e $cfg_file ) {
     die "Did not provide a config file";
 }
 
 my $client = Games::Lacuna::Client->new(
         cfg_file => $cfg_file,
-         #debug    => 1,
+	rpc_sleep => $rpc_sleep,
+        #debug    => 1,
 );
 
 my $empire  = $client->empire->get_status->{empire};
@@ -139,7 +143,9 @@ if ($outfile) {
     print $out Dump($plan);
 }
 
-
+print "$client->{total_calls} api calls made.\n";
+print "You have made $client->{rpc_count} calls today\n";
+exit;
 
 sub usage {
   die <<"END_USAGE";
